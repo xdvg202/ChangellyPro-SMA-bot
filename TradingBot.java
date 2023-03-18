@@ -3,12 +3,18 @@ import java.net.*;
 
 import org.json.JSONArray;
 
-public class TradingBot {
+public class TradingBot { 
+
+    public static final String key = "s9N9ZOUuCoTNJDtlpfvWiHq3_QZhES3S";
+
+    public static final String priv = "IGOpMy1NwzKWOjYHgeQQedYspqNb-QHD";
     public static void main(String[] args) throws Exception {
-        while (true) {
+        /*while (true) {
             System.out.println(getMa());
             Thread.sleep(50);
-        }
+        }*/
+        postOrderRequest(true);
+        //TODO figure out when and how much to buy
     }
 
     public static void postOrderRequest(boolean buy) throws Exception {
@@ -18,14 +24,22 @@ public class TradingBot {
             side = "sell";
         }
 
-        double quantity = 0.009;
+        double quantity = 1;
         String type = "market";
+        String timeInForce = "GTC";
 
-        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M15&limit=15");
+
+        URL url = new URL("https://api.pro.changelly.com/api/3/margin/order");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
-        //TODO add the api key and priv key.
-        con.setRequestProperty("", "");
+        
+        con.setRequestProperty("s9N9ZOUuCoTNJDtlpfvWiHq3_QZhES3S", "IGOpMy1NwzKWOjYHgeQQedYspqNb-QHD");
+
+//TODO setup the post request to the endpoint.
+
+        //byte[] props = {side.getBytes()}; 
+        //System.out.println(props.toString());
+con.getOutputStream().write(null);
 
         BufferedReader webRespOrder = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
