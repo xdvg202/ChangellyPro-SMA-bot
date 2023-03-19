@@ -1,70 +1,61 @@
 import java.io.*;
 import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.text.Normalizer.Form;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.Calendar;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 
 public class TradingBot {
 
-    public static final String key = "s9N9ZOUuCoTNJDtlpfvWiHq3_QZhES3S";
-
-    public static final String priv = "IGOpMy1NwzKWOjYHgeQQedYspqNb-QHD";
+    public static final String key = "4ozEDIwf0T2sM3t8G5nIyjyZEJ74pKh8";
+    public static final String priv = "jqYujeWUM9xFIjDfwNIzA9AXTrkrOIqv";
 
     public static void main(String[] args) throws Exception {
-        /*
-         * while (true) {
-         * System.out.println(getMa());
-         * Thread.sleep(50);
-         * }
-         */
+      
         postOrderRequest(true);
-        // TODO figure out when and how much to buy
+        
     }
 
     public static void postOrderRequest(boolean buy) throws Exception {
-        String symbol = "BTCUSDT";
-        String side = "buy";
-        if (!buy) {
-            side = "sell";
+
+        JSONObject obj = new JSONObject();
+        obj.put("client_order_id", "");
+        obj.put("symbol", "BTCUSDT");
+        if (buy) {
+            obj.put("side", "buy");
+        } else {
+            obj.put("side", "sell");
         }
+        obj.put("type", "market");
+        obj.put("time_in_force", "GTC");
+        obj.put("quantity", "2");
 
-        double quantity = 1;
-        String type = "market";
-        String timeInForce = "GTC";
+        String auth = key + ":" + priv;
+        byte[] encodedBytes = Base64.getEncoder().encode(auth.getBytes(Charset.forName("US-ASCII")));
 
-        URL url = new URL("https://api.pro.changelly.com/api/3/margin/order");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setDoOutput(true);
-        con.setRequestMethod("POST");
-        String userpass = key + ":" + priv;
-        String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
-        con.addRequestProperty("Authorization", basicAuth);
+        String authHeader = "Basic " + new String(encodedBytes);
 
-        
-        con.addRequestProperty("Content-Type ", "application/json");
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest postRequest = HttpRequest.newBuilder()
+                .uri(new URI("https://api.pro.changelly.com/api/3/spot/order"))
+                .header("Authorization", authHeader)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(obj.toString()))
+                .build();
 
-        
-
-        String postRequestString = "{\"client_order_id\":\"\", \"symbol\": \"BTCUSDT\", \"side\": \"sell\", \"type\": \"market\", \"time_in_force\": \"GTC\", \"quantity\": \"2\"}";
-
-        String temp = "client_order_id=&time_in_force=GTC&reduce_only=&price=&quantity=2&post_only=&strict_validate=&stop_price=&expire_time=&make_rate=&side=sell&take_rate=&symbol=BTCUSDT&type=market";
-        try (OutputStream os = con.getOutputStream()) {
-            byte[] input = postRequestString.getBytes("utf-8");
-            os.write(input, 0, input.length);
-        }
-        // con.getOutputStream().write(temp.getBytes());
-
-        BufferedReader webRespOrder = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-        String responseTemp = new String();
-        String inputLine = null;
-
-        while ((inputLine = webRespOrder.readLine()) != null) {
-            responseTemp.concat(inputLine);
-        }
-        System.out.println(responseTemp);
-        webRespOrder.close();
-        con.disconnect();
+        HttpResponse response = client.send(postRequest, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
     }
 
     public static double getMa() throws Exception {
