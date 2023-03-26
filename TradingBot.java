@@ -4,17 +4,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
-import java.net.http.HttpRequest.BodyPublisher;
-import java.text.Normalizer.Form;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
 import java.util.Base64;
-import java.util.Calendar;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
+
 
 public class TradingBot {
 
@@ -24,6 +19,7 @@ public class TradingBot {
     public static void main(String[] args) throws Exception {
       
         postOrderRequest(true);
+        System.out.println(getMa());
         
     }
 
@@ -48,7 +44,7 @@ public class TradingBot {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest postRequest = HttpRequest.newBuilder()
-                .uri(new URI("https://api.pro.changelly.com/api/3/spot/order"))
+                .uri(new URI("https://api.pro.changelly.com/api/3/margin/order"))
                 .header("Authorization", authHeader)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(obj.toString()))
