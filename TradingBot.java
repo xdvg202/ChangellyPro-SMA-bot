@@ -6,10 +6,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.Base64;
 
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 
 public class TradingBot {
 
@@ -17,10 +15,39 @@ public class TradingBot {
     public static final String priv = "jqYujeWUM9xFIjDfwNIzA9AXTrkrOIqv";
 
     public static void main(String[] args) throws Exception {
-      
-        postOrderRequest(true);
-        System.out.println(getMa());
-        
+
+        // postOrderRequest(true);
+        // System.out.println(getMa());
+        // System.out.println(getRsi());
+        getAvailableBalance();
+
+    }
+
+    public static void getAvailableBalance() throws Exception {
+        String auth = key + ":" + priv;
+        byte[] encodedBytes = Base64.getEncoder().encode(auth.getBytes(Charset.forName("US-ASCII")));
+
+        String authHeader = "Basic " + new String(encodedBytes);
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest getRequest = HttpRequest.newBuilder()
+                .uri(new URI("https://api.pro.changelly.com/api/3/spot/balance"))
+                .header("Authorization", authHeader)
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+
+        HttpResponse response = client.send(getRequest, HttpResponse.BodyHandlers.ofString());
+        // System.out.println(response.body());
+
+        String stringResp = response.body().toString();
+
+        String[] respArr = stringResp.split("");
+        for (int i = 0; i < respArr.length; i++) {
+            System.out.print(respArr[i]);
+        }
+        // BTC starts at index 14 | 32 is the first number of BTC balance.
+
     }
 
     public static void postOrderRequest(boolean buy) throws Exception {
@@ -44,7 +71,7 @@ public class TradingBot {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest postRequest = HttpRequest.newBuilder()
-                .uri(new URI("https://api.pro.changelly.com/api/3/margin/order"))
+                .uri(new URI("https://api.pro.changelly.com/api/3/spot/order"))
                 .header("Authorization", authHeader)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(obj.toString()))
@@ -56,7 +83,7 @@ public class TradingBot {
 
     public static double getMa() throws Exception {
 
-        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M15&limit=15");
+        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M15&limit=40");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
         BufferedReader webRespMa = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -72,11 +99,111 @@ public class TradingBot {
 
         double sum = 0;
 
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 40; i++) {
             sum += jsonArray.getJSONObject(i).getDouble("close");
         }
 
-        return sum /= 15;
+        return sum /= 40;
     }
 
+    public static double getRsi() throws Exception {
+
+        Candle[] allCandles = new Candle[15];
+
+        String apiUrl = "https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=15";
+
+        // create a URL object for the API endpoint
+        URL url = new URL(apiUrl);
+
+        // create an HttpURLConnection object and set the request method to GET
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+
+        // read the response from the API endpoint
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        JSONArray jsonArray = new JSONArray(response.toString());
+        // System.out.println(jsonArray.toString());
+
+        for (int i = 0; i < 14; i++) {
+            allCandles[i] = new Candle((JSONObject) jsonArray.get(i),
+                    ((JSONObject) jsonArray.get(i + 1)).getDouble("close"));
+        }
+
+        double avGain = 0;
+        double avLoss = 0;
+
+        for (int j = 1; j < 14; j++) {
+
+            if (allCandles[j].getGain() == 0) {
+                avLoss += allCandles[j].getLoss();
+            } else {
+                avGain += allCandles[j].getGain();
+            }
+        }
+        avGain /= 13;
+
+        avLoss /= 13;
+
+        double temp1 = ((avGain * 13) + allCandles[0].getGain()) / 14;
+        double temp2 = ((avLoss * 13) + allCandles[0].getLoss()) / 14;
+        double rs = temp1 / temp2;
+
+        double rsi = 100 - (100 / (1 + rs));
+
+        return rsi;
+
+    }
+
+}
+
+class Candle {
+    public int timeStamp;
+
+    public double close = 0;
+    public double prevClose = 0;
+    public double priceGain = 0.0;
+    public double priceLoss = 0.0;
+
+    public Candle(JSONObject e, double prevClose) {
+        try {
+            close = e.getDouble("close");
+        } catch (Exception f) {
+            // do nothing
+        }
+        this.prevClose = prevClose;
+
+        calcGL();
+    }
+
+    public void calcGL() {
+        double temp = close - prevClose;
+        // System.out.println("temp is:"+temp);
+        if (temp < 0) {
+            priceLoss = Math.abs(temp);
+
+        } else {
+            priceGain = Math.abs(temp);
+
+        }
+
+    }
+
+    public double getClose() {
+        return close;
+    }
+
+    public double getGain() {
+        return priceGain;
+    }
+
+    public double getLoss() {
+        return priceLoss;
+    }
 }
