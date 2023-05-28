@@ -19,9 +19,7 @@ public class TradingBot {
 
         while (true) {
             double rsi = getRsi();
-            System.out.println(rsi);
-            rsi = 80;
-            positionOpen = true;
+            
             if (rsi >= 70 && positionOpen) {
                 postOrderRequest(false, getAvailableBalance(false));
                 positionOpen = false;
