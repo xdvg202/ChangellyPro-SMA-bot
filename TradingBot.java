@@ -13,19 +13,29 @@ public class TradingBot {
 
     public static final String key = "4ozEDIwf0T2sM3t8G5nIyjyZEJ74pKh8";
     public static final String priv = "jqYujeWUM9xFIjDfwNIzA9AXTrkrOIqv";
+    public static boolean positionOpen = false;
 
     public static void main(String[] args) throws Exception {
 
-        boolean buy = false;
-
-        postOrderRequest(buy, getAvailableBalance(buy));
-        // System.out.println(getMa());
-        System.out.println(getRsi());
-        // getAvailableBalance();
+        while (true) {
+            double rsi = getRsi();
+            System.out.println(rsi);
+            rsi = 80;
+            positionOpen = true;
+            if (rsi >= 70 && positionOpen) {
+                postOrderRequest(false, getAvailableBalance(false));
+                positionOpen = false;
+            } else if (rsi <= 35) {
+                postOrderRequest(true, getAvailableBalance(true));
+                positionOpen = true;
+                Thread.sleep(300000);
+            }
+            Thread.sleep(10000);
+        }
 
     }
 
-    public static int getAvailableBalance(boolean buy) throws Exception {
+    public static double getAvailableBalance(boolean buy) throws Exception {
         String auth = key + ":" + priv;
         byte[] encodedBytes = Base64.getEncoder().encode(auth.getBytes(Charset.forName("US-ASCII")));
 
@@ -43,11 +53,12 @@ public class TradingBot {
         // System.out.println(response.body());
         JSONArray jsonArray = new JSONArray(response.body().toString());
 
-        int btcBal = (int) ((JSONObject) jsonArray.get(0)).getDouble("available");
-        int usdtBal = (int) ((JSONObject) jsonArray.get(3)).getDouble("available");
+        double btcBal = ((JSONObject) jsonArray.get(0)).getDouble("available");
+        double usdtBal = ((JSONObject) jsonArray.get(3)).getDouble("available");
 
         // Buffer since the amount available cant actually be used for market orders
-        usdtBal *= 0.85;
+
+        usdtBal = (int) (usdtBal * 0.8);
         System.out.println(usdtBal);
 
         URL req = new URL("https://api.pro.changelly.com/api/3/public/ticker/btcusdt");
@@ -58,23 +69,25 @@ public class TradingBot {
 
         StringBuffer tempResp = new StringBuffer();
         while ((inputLine = in.readLine()) != null) {
-             tempResp.append(inputLine);
+            tempResp.append(inputLine);
         }
         in.close();
 
-        JSONArray tempArray = new JSONArray(tempResp.toString());
+        JSONArray tempArray = new JSONArray("[" + tempResp.toString() + "]");
 
         double bidPrice = tempArray.getJSONObject(0).getDouble("bid");
+        // System.out.println(bidPrice);
 
         if (buy) {
             // this returns the quantity which is what we need
-            return (int) (usdtBal * bidPrice);
+
+            return (usdtBal / bidPrice);
         }
         return btcBal;
 
     }
 
-    public static void postOrderRequest(boolean buy, int balance) throws Exception {
+    public static void postOrderRequest(boolean buy, double balance) throws Exception {
 
         JSONObject obj = new JSONObject();
         obj.put("client_order_id", "");
@@ -174,10 +187,8 @@ public class TradingBot {
         avGain /= 14;
 
         avLoss /= 14;
-/* 
-        double temp1 = ((avGain * 13) + allCandles[0].getGain()) / 14;
-        double temp2 = ((avLoss * 13) + allCandles[0].getLoss()) / 14;*/
-        double rs = avGain/avLoss;
+
+        double rs = avGain / avLoss;
 
         double rsi = 100 - (100 / (1 + rs));
 
