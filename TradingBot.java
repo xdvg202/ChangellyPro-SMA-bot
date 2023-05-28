@@ -16,14 +16,16 @@ public class TradingBot {
 
     public static void main(String[] args) throws Exception {
 
-        // postOrderRequest(true);
+        boolean buy = false;
+
+        postOrderRequest(buy, getAvailableBalance(buy));
         // System.out.println(getMa());
-        // System.out.println(getRsi());
-        getAvailableBalance();
+        System.out.println(getRsi());
+        // getAvailableBalance();
 
     }
 
-    public static void getAvailableBalance() throws Exception {
+    public static int getAvailableBalance(boolean buy) throws Exception {
         String auth = key + ":" + priv;
         byte[] encodedBytes = Base64.getEncoder().encode(auth.getBytes(Charset.forName("US-ASCII")));
 
@@ -39,18 +41,40 @@ public class TradingBot {
 
         HttpResponse response = client.send(getRequest, HttpResponse.BodyHandlers.ofString());
         // System.out.println(response.body());
+        JSONArray jsonArray = new JSONArray(response.body().toString());
 
-        String stringResp = response.body().toString();
+        int btcBal = (int) ((JSONObject) jsonArray.get(0)).getDouble("available");
+        int usdtBal = (int) ((JSONObject) jsonArray.get(3)).getDouble("available");
 
-        String[] respArr = stringResp.split("");
-        for (int i = 0; i < respArr.length; i++) {
-            System.out.print(respArr[i]);
+        // Buffer since the amount available cant actually be used for market orders
+        usdtBal *= 0.85;
+        System.out.println(usdtBal);
+
+        URL req = new URL("https://api.pro.changelly.com/api/3/public/ticker/btcusdt");
+        HttpURLConnection con = (HttpURLConnection) req.openConnection();
+        con.setRequestMethod("GET");
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+
+        StringBuffer tempResp = new StringBuffer();
+        while ((inputLine = in.readLine()) != null) {
+             tempResp.append(inputLine);
         }
-        // BTC starts at index 14 | 32 is the first number of BTC balance.
+        in.close();
+
+        JSONArray tempArray = new JSONArray(tempResp.toString());
+
+        double bidPrice = tempArray.getJSONObject(0).getDouble("bid");
+
+        if (buy) {
+            // this returns the quantity which is what we need
+            return (int) (usdtBal * bidPrice);
+        }
+        return btcBal;
 
     }
 
-    public static void postOrderRequest(boolean buy) throws Exception {
+    public static void postOrderRequest(boolean buy, int balance) throws Exception {
 
         JSONObject obj = new JSONObject();
         obj.put("client_order_id", "");
@@ -62,7 +86,7 @@ public class TradingBot {
         }
         obj.put("type", "market");
         obj.put("time_in_force", "GTC");
-        obj.put("quantity", "2");
+        obj.put("quantity", balance);
 
         String auth = key + ":" + priv;
         byte[] encodedBytes = Base64.getEncoder().encode(auth.getBytes(Charset.forName("US-ASCII")));
@@ -83,7 +107,7 @@ public class TradingBot {
 
     public static double getMa() throws Exception {
 
-        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M15&limit=40");
+        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=40");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
         BufferedReader webRespMa = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -139,7 +163,7 @@ public class TradingBot {
         double avGain = 0;
         double avLoss = 0;
 
-        for (int j = 1; j < 14; j++) {
+        for (int j = 0; j < 14; j++) {
 
             if (allCandles[j].getGain() == 0) {
                 avLoss += allCandles[j].getLoss();
@@ -147,13 +171,13 @@ public class TradingBot {
                 avGain += allCandles[j].getGain();
             }
         }
-        avGain /= 13;
+        avGain /= 14;
 
-        avLoss /= 13;
-
+        avLoss /= 14;
+/* 
         double temp1 = ((avGain * 13) + allCandles[0].getGain()) / 14;
-        double temp2 = ((avLoss * 13) + allCandles[0].getLoss()) / 14;
-        double rs = temp1 / temp2;
+        double temp2 = ((avLoss * 13) + allCandles[0].getLoss()) / 14;*/
+        double rs = avGain/avLoss;
 
         double rsi = 100 - (100 / (1 + rs));
 
