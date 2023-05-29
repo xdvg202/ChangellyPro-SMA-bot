@@ -15,22 +15,56 @@ public class TradingBot {
     public static final String priv = "jqYujeWUM9xFIjDfwNIzA9AXTrkrOIqv";
     public static boolean positionOpen = false;
 
+    public static final int aboveMA = 1;
+    public static final int belowMA = 2;
+
     public static void main(String[] args) throws Exception {
 
         while (true) {
-            double rsi = getRsi();
-            
-            if (rsi >= 70 && positionOpen) {
-                postOrderRequest(false, getAvailableBalance(false));
-                positionOpen = false;
-            } else if (rsi <= 35) {
-                postOrderRequest(true, getAvailableBalance(true));
-                positionOpen = true;
-                Thread.sleep(300000);
+
+            if (crossOver()) {
+
             }
-            Thread.sleep(10000);
         }
 
+    }
+
+    // TODO write a method that checks if the last 5 bars were above or below MA to
+    // see the behav.
+    // Trigger it after the delta between the two closes, that way you can check
+    // historically if it was above or below
+
+    public static int priceLocation() {
+
+        return 0;
+    }
+
+    public static boolean crossOver() throws Exception {
+        double deltaPriceToMA = Math.abs(getMa() - getBidPrice());
+        if (deltaPriceToMA <= 5) {
+            return true;
+        }
+        return false;
+    }
+
+    public static double getBidPrice() throws Exception {
+
+        URL req = new URL("https://api.pro.changelly.com/api/3/public/ticker/btcusdt");
+        HttpURLConnection con = (HttpURLConnection) req.openConnection();
+        con.setRequestMethod("GET");
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+
+        StringBuffer tempResp = new StringBuffer();
+        while ((inputLine = in.readLine()) != null) {
+            tempResp.append(inputLine);
+        }
+        in.close();
+
+        JSONArray tempArray = new JSONArray("[" + tempResp.toString() + "]");
+
+        double bidPrice = tempArray.getJSONObject(0).getDouble("bid");
+        return bidPrice;
     }
 
     public static double getAvailableBalance(boolean buy) throws Exception {
@@ -59,27 +93,10 @@ public class TradingBot {
         usdtBal = (int) (usdtBal * 0.8);
         System.out.println(usdtBal);
 
-        URL req = new URL("https://api.pro.changelly.com/api/3/public/ticker/btcusdt");
-        HttpURLConnection con = (HttpURLConnection) req.openConnection();
-        con.setRequestMethod("GET");
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String inputLine;
-
-        StringBuffer tempResp = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
-            tempResp.append(inputLine);
-        }
-        in.close();
-
-        JSONArray tempArray = new JSONArray("[" + tempResp.toString() + "]");
-
-        double bidPrice = tempArray.getJSONObject(0).getDouble("bid");
-        // System.out.println(bidPrice);
-
         if (buy) {
             // this returns the quantity which is what we need
 
-            return (usdtBal / bidPrice);
+            return (usdtBal / getBidPrice());
         }
         return btcBal;
 
