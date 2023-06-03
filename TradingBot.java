@@ -21,10 +21,26 @@ public class TradingBot {
     public static void main(String[] args) throws Exception {
 
         while (true) {
-
-            if (crossOver()) {
-
+            System.out.println("The price right now is: " + getBidPrice());
+            System.out.println("The moving average is: " + getMa());
+            String loco = "below";
+            if (getMa() < getBidPrice()) {
+                loco = "above";
             }
+
+            System.out.println("The price is " + loco + " the moving average.");
+            // when its above the moving average
+            if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
+                postOrderRequest(true, getAvailableBalance(true));
+                positionOpen = true;
+                Thread.sleep(300000);
+
+            } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
+                postOrderRequest(false, getAvailableBalance(false));
+                positionOpen = false;
+            }
+            
+            Thread.sleep(1000);
         }
 
     }
@@ -34,9 +50,33 @@ public class TradingBot {
     // Trigger it after the delta between the two closes, that way you can check
     // historically if it was above or below
 
-    public static int priceLocation() {
+    public static int checkPriceLocation() throws Exception {
+        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=6");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-        return 0;
+        BufferedReader webRespMa = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+        String inputLine = null;
+        StringBuffer response = new StringBuffer();
+        while ((inputLine = webRespMa.readLine()) != null) {
+            response.append(inputLine);
+        }
+        webRespMa.close();
+
+        JSONArray jsonArray = new JSONArray(response.toString());
+
+        int pos = 0;
+
+        for (int i = 1; i < 6; i++) {
+            if (jsonArray.getJSONObject(i).getDouble("close") > getMa()) {
+                pos = 1;
+            } else {
+                pos = 2;
+            }
+
+        }
+
+        return pos;
     }
 
     public static boolean crossOver() throws Exception {
@@ -95,7 +135,7 @@ public class TradingBot {
 
         if (buy) {
             // this returns the quantity which is what we need
-
+System.out.println("available btc to buy: "+usdtBal/getBidPrice());
             return (usdtBal / getBidPrice());
         }
         return btcBal;
@@ -131,6 +171,7 @@ public class TradingBot {
 
         HttpResponse response = client.send(postRequest, HttpResponse.BodyHandlers.ofString());
         System.out.println(response.body());
+
     }
 
     public static double getMa() throws Exception {
