@@ -45,9 +45,17 @@ public class TradingBot {
          * Thread.sleep(1000);
          * }
          */
-        if(getRsi()>70){
-            
+        if (getRsi() > 70 && !positionOpen) {
+            postOrderRequest(true, getAvailableBalance(true));
+            positionOpen = true;
+            Thread.sleep(600000);
+        } else if (getRsi() < 30 && positionOpen) {
+            postOrderRequest(false, getAvailableBalance(false));
+            positionOpen = false;
+            // sleep for 10 mins
+            Thread.sleep(600000);
         }
+        Thread.sleep(60000);
     }
 
     public static double calculateStochastic() throws Exception {
