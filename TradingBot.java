@@ -45,10 +45,12 @@ public class TradingBot {
          * Thread.sleep(1000);
          * }
          */
-calculateStochastic()
+        if(getRsi()>70){
+            
+        }
     }
 
-    public static int calculateStochastic() throws Exception {
+    public static double calculateStochastic() throws Exception {
         URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=20");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
@@ -62,7 +64,7 @@ calculateStochastic()
         webRespMa.close();
 
         JSONArray jsonArray = new JSONArray(response.toString());
-        double L20 = 11111111111111111111111111111111111;
+        double L20 = 111111111;
         double H20 = 0;
         // go thru all the candles, find highest price, and find lowest price within the
         // range
@@ -254,8 +256,7 @@ calculateStochastic()
 
         JSONArray jsonArray = new JSONArray(response.toString());
         // System.out.println(jsonArray.toString());
-
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 13; i++) {
             allCandles[i] = new Candle((JSONObject) jsonArray.get(i),
                     ((JSONObject) jsonArray.get(i + 1)).getDouble("close"));
         }
@@ -263,26 +264,29 @@ calculateStochastic()
         double avGain = 0;
         double avLoss = 0;
 
-        for (int j = 0; j < 14; j++) {
-
+        for (int j = 0; j < 13; j++) {
             if (allCandles[j].getGain() == 0) {
                 avLoss += allCandles[j].getLoss();
             } else {
                 avGain += allCandles[j].getGain();
             }
         }
-        avGain /= 14;
 
-        avLoss /= 14;
+        avGain /= 13;
+        avLoss /= 13;
 
         double rs = avGain / avLoss;
 
-        double rsi = 100 - (100 / (1 + rs));
+        double rsi;
+        if (avLoss != 0) {
+            rsi = 100 - (100 / (1 + rs));
+        } else {
+            rsi = 100; // Set rsi to a default value when avLoss is zero.
+        }
 
         return rsi;
 
     }
-
 }
 
 class Candle {
