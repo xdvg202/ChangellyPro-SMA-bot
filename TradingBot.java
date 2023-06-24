@@ -39,16 +39,34 @@ public class TradingBot {
                 postOrderRequest(false, getAvailableBalance(false));
                 positionOpen = false;
             }
-            
+
             Thread.sleep(1000);
         }
 
     }
+    public static int calculateStochastic()throws Exception{
+        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=20");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-    // TODO write a method that checks if the last 5 bars were above or below MA to
-    // see the behav.
-    // Trigger it after the delta between the two closes, that way you can check
-    // historically if it was above or below
+        BufferedReader webRespMa = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+        String inputLine = null;
+        StringBuffer response = new StringBuffer();
+        while ((inputLine = webRespMa.readLine()) != null) {
+            response.append(inputLine);
+        }
+        webRespMa.close();
+
+        JSONArray jsonArray = new JSONArray(response.toString());
+double L20 = 0;
+double H20 = 0;
+//go thru all the candles, find highest price, and find lowest price within the range. 
+
+        
+
+        return 0;
+    }
+
 
     public static int checkPriceLocation() throws Exception {
         URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=6");
@@ -135,7 +153,7 @@ public class TradingBot {
 
         if (buy) {
             // this returns the quantity which is what we need
-System.out.println("available btc to buy: "+usdtBal/getBidPrice());
+            System.out.println("available btc to buy: " + usdtBal / getBidPrice());
             return (usdtBal / getBidPrice());
         }
         return btcBal;
