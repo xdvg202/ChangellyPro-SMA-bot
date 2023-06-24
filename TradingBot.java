@@ -20,31 +20,35 @@ public class TradingBot {
 
     public static void main(String[] args) throws Exception {
 
-        while (true) {
-            System.out.println("The price right now is: " + getBidPrice());
-            System.out.println("The moving average is: " + getMa());
-            String loco = "below";
-            if (getMa() < getBidPrice()) {
-                loco = "above";
-            }
-
-            System.out.println("The price is " + loco + " the moving average.");
-            // when its above the moving average
-            if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
-                postOrderRequest(true, getAvailableBalance(true));
-                positionOpen = true;
-                Thread.sleep(300000);
-
-            } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
-                postOrderRequest(false, getAvailableBalance(false));
-                positionOpen = false;
-            }
-
-            Thread.sleep(1000);
-        }
-
+        /*
+         * moving average trader
+         * while (true) {
+         * System.out.println("The price right now is: " + getBidPrice());
+         * System.out.println("The moving average is: " + getMa());
+         * String loco = "below";
+         * if (getMa() < getBidPrice()) {
+         * loco = "above";
+         * }
+         * 
+         * System.out.println("The price is " + loco + " the moving average.");
+         * // when its above the moving average
+         * if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
+         * postOrderRequest(true, getAvailableBalance(true));
+         * positionOpen = true;
+         * Thread.sleep(300000);
+         * 
+         * } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
+         * postOrderRequest(false, getAvailableBalance(false));
+         * positionOpen = false;
+         * }
+         * 
+         * Thread.sleep(1000);
+         * }
+         */
+calculateStochastic()
     }
-    public static int calculateStochastic()throws Exception{
+
+    public static int calculateStochastic() throws Exception {
         URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=20");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
@@ -58,15 +62,24 @@ public class TradingBot {
         webRespMa.close();
 
         JSONArray jsonArray = new JSONArray(response.toString());
-double L20 = 0;
-double H20 = 0;
-//go thru all the candles, find highest price, and find lowest price within the range. 
+        double L20 = 11111111111111111111111111111111111;
+        double H20 = 0;
+        // go thru all the candles, find highest price, and find lowest price within the
+        // range
+        double recentClose = jsonArray.getJSONObject(0).getDouble("close");
 
-        
+        for (int i = 1; i < 20; i++) {
+            if (jsonArray.getJSONObject(i).getDouble("close") < L20) {
+                L20 = jsonArray.getJSONObject(i).getDouble("close");
+            } else if (jsonArray.getJSONObject(i).getDouble("close") > H20) {
+                H20 = jsonArray.getJSONObject(i).getDouble("close");
+            }
 
-        return 0;
+        }
+        double K = ((recentClose - L20) / (H20 - L20)) * 100;
+
+        return K;
     }
-
 
     public static int checkPriceLocation() throws Exception {
         URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=6");
