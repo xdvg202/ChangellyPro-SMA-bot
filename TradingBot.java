@@ -45,16 +45,17 @@ public class TradingBot {
          * Thread.sleep(1000);
          * }
          */
-        if (getRsi() > 70 && !positionOpen) {
-            postOrderRequest(true, getAvailableBalance(true));
-            positionOpen = true;
-            Thread.sleep(600000);
-        } else if (getRsi() < 30 && positionOpen) {
+        if (getRsi() > 70 && positionOpen) {
             postOrderRequest(false, getAvailableBalance(false));
             positionOpen = false;
+            Thread.sleep(600000);
+        } else if (getRsi() < 30 && !positionOpen) {
+            postOrderRequest(true, getAvailableBalance(true));
+            positionOpen = true;
             // sleep for 10 mins
             Thread.sleep(600000);
         }
+        System.out.println(getRsi());
         Thread.sleep(60000);
     }
 
