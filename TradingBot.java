@@ -45,6 +45,7 @@ public class TradingBot {
          * Thread.sleep(1000);
          * }
          */
+        while(true){
         if (getRsi() > 70 && positionOpen) {
             postOrderRequest(false, getAvailableBalance(false));
             positionOpen = false;
@@ -57,6 +58,7 @@ public class TradingBot {
         }
         System.out.println(getRsi());
         Thread.sleep(60000);
+    }
     }
 
     public static double calculateStochastic() throws Exception {
