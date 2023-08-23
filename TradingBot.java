@@ -11,8 +11,8 @@ import org.json.JSONObject;
 
 public class TradingBot {
 
-    public static final String key = "4ozEDIwf0T2sM3t8G5nIyjyZEJ74pKh8";
-    public static final String priv = "jqYujeWUM9xFIjDfwNIzA9AXTrkrOIqv";
+    public static final String key = "U8fqtLLg1mr1ShgK-ke5Rl0mzx_9smaK";
+    public static final String priv = "a_tBiCMQWOAzdAiYSN_qf444BTWkWMRh";
     public static boolean positionOpen = false;
 
     public static final int aboveMA = 1;
@@ -20,45 +20,48 @@ public class TradingBot {
 
     public static void main(String[] args) throws Exception {
 
+        // moving average trader
+        while (true) {
+            System.out.println("The price right now is: " + getBidPrice());
+            System.out.println("The moving average is: " + getMa());
+            String loco = "below";
+            if (getMa() < getBidPrice()) {
+                loco = "above";
+            }
+
+            System.out.println("The price is " + loco + " the moving average.");
+            // when its above the moving average
+            if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
+                postOrderRequest(true, getAvailableBalance(true));
+                positionOpen = true;
+                Thread.sleep(300000);
+
+            } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
+                postOrderRequest(false, getAvailableBalance(false));
+                positionOpen = false;
+            }
+
+            Thread.sleep(1000);
+        }
+
         /*
-         * moving average trader
-         * while (true) {
-         * System.out.println("The price right now is: " + getBidPrice());
-         * System.out.println("The moving average is: " + getMa());
-         * String loco = "below";
-         * if (getMa() < getBidPrice()) {
-         * loco = "above";
-         * }
-         * 
-         * System.out.println("The price is " + loco + " the moving average.");
-         * // when its above the moving average
-         * if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
-         * postOrderRequest(true, getAvailableBalance(true));
-         * positionOpen = true;
-         * Thread.sleep(300000);
-         * 
-         * } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
+         * while(true){
+         * if (getRsi() > 70 && positionOpen) {
          * postOrderRequest(false, getAvailableBalance(false));
          * positionOpen = false;
+         * Thread.sleep(600000);
+         * } else if (getRsi() < 30 && !positionOpen) {
+         * postOrderRequest(true, getAvailableBalance(true));
+         * positionOpen = true;
+         * // sleep for 10 mins
+         * Thread.sleep(600000);
          * }
+         * System.out.println(getRsi());
+         * Thread.sleep(60000);
          * 
-         * Thread.sleep(1000);
          * }
          */
-        while(true){
-        if (getRsi() > 70 && positionOpen) {
-            postOrderRequest(false, getAvailableBalance(false));
-            positionOpen = false;
-            Thread.sleep(600000);
-        } else if (getRsi() < 30 && !positionOpen) {
-            postOrderRequest(true, getAvailableBalance(true));
-            positionOpen = true;
-            // sleep for 10 mins
-            Thread.sleep(600000);
-        }
-        System.out.println(getRsi());
-        Thread.sleep(60000);
-    }
+
     }
 
     public static double calculateStochastic() throws Exception {
