@@ -29,7 +29,7 @@ public class TradingBot {
             }
 
             System.out.println("The price is " + loco + " the moving average.");
-            // when its above the moving average
+
             if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
                 postOrderRequest(true, getAvailableBalance(true));
                 positionOpen = true;
