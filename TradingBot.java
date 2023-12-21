@@ -10,9 +10,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class TradingBot {
-
-    public static final String key = "4ozEDIwf0T2sM3t8G5nIyjyZEJ74pKh8";
-    public static final String priv = "jqYujeWUM9xFIjDfwNIzA9AXTrkrOIqv";
+    // insert own api key
+    public static final String key = "";
+    public static final String priv = "";
     public static boolean positionOpen = false;
 
     public static final int aboveMA = 1;
@@ -20,75 +20,29 @@ public class TradingBot {
 
     public static void main(String[] args) throws Exception {
 
-        /*
-         * moving average trader
-         * while (true) {
-         * System.out.println("The price right now is: " + getBidPrice());
-         * System.out.println("The moving average is: " + getMa());
-         * String loco = "below";
-         * if (getMa() < getBidPrice()) {
-         * loco = "above";
-         * }
-         * 
-         * System.out.println("The price is " + loco + " the moving average.");
-         * // when its above the moving average
-         * if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
-         * postOrderRequest(true, getAvailableBalance(true));
-         * positionOpen = true;
-         * Thread.sleep(300000);
-         * 
-         * } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
-         * postOrderRequest(false, getAvailableBalance(false));
-         * positionOpen = false;
-         * }
-         * 
-         * Thread.sleep(1000);
-         * }
-         */
-        if (getRsi() > 70 && !positionOpen) {
-            postOrderRequest(true, getAvailableBalance(true));
-            positionOpen = true;
-            Thread.sleep(600000);
-        } else if (getRsi() < 30 && positionOpen) {
-            postOrderRequest(false, getAvailableBalance(false));
-            positionOpen = false;
-            // sleep for 10 mins
-            Thread.sleep(600000);
-        }
-        Thread.sleep(60000);
-    }
-
-    public static double calculateStochastic() throws Exception {
-        URL url = new URL("https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=20");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-        BufferedReader webRespMa = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-        String inputLine = null;
-        StringBuffer response = new StringBuffer();
-        while ((inputLine = webRespMa.readLine()) != null) {
-            response.append(inputLine);
-        }
-        webRespMa.close();
-
-        JSONArray jsonArray = new JSONArray(response.toString());
-        double L20 = 111111111;
-        double H20 = 0;
-        // go thru all the candles, find highest price, and find lowest price within the
-        // range
-        double recentClose = jsonArray.getJSONObject(0).getDouble("close");
-
-        for (int i = 1; i < 20; i++) {
-            if (jsonArray.getJSONObject(i).getDouble("close") < L20) {
-                L20 = jsonArray.getJSONObject(i).getDouble("close");
-            } else if (jsonArray.getJSONObject(i).getDouble("close") > H20) {
-                H20 = jsonArray.getJSONObject(i).getDouble("close");
+        while (true) {
+            System.out.println("The price right now is: " + getBidPrice());
+            System.out.println("The moving average is: " + getMa());
+            String loco = "below";
+            if (getMa() < getBidPrice()) {
+                loco = "above";
             }
 
-        }
-        double K = ((recentClose - L20) / (H20 - L20)) * 100;
+            System.out.println("The price is " + loco + " the moving average.");
+            // when its above the moving average
+            if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
+                postOrderRequest(true, getAvailableBalance(true));
+                positionOpen = true;
+                Thread.sleep(300000);
 
-        return K;
+            } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
+                postOrderRequest(false, getAvailableBalance(false));
+                positionOpen = false;
+            }
+
+            Thread.sleep(1000);
+        }
+
     }
 
     public static int checkPriceLocation() throws Exception {
@@ -239,62 +193,66 @@ public class TradingBot {
 
         return sum /= 40;
     }
-
-    public static double getRsi() throws Exception {
-
-        Candle[] allCandles = new Candle[15];
-
-        String apiUrl = "https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=15";
-
-        // create a URL object for the API endpoint
-        URL url = new URL(apiUrl);
-
-        // create an HttpURLConnection object and set the request method to GET
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-
-        // read the response from the API endpoint
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuffer response = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-
-        JSONArray jsonArray = new JSONArray(response.toString());
-        // System.out.println(jsonArray.toString());
-        for (int i = 0; i < 13; i++) {
-            allCandles[i] = new Candle((JSONObject) jsonArray.get(i),
-                    ((JSONObject) jsonArray.get(i + 1)).getDouble("close"));
-        }
-
-        double avGain = 0;
-        double avLoss = 0;
-
-        for (int j = 0; j < 13; j++) {
-            if (allCandles[j].getGain() == 0) {
-                avLoss += allCandles[j].getLoss();
-            } else {
-                avGain += allCandles[j].getGain();
-            }
-        }
-
-        avGain /= 13;
-        avLoss /= 13;
-
-        double rs = avGain / avLoss;
-
-        double rsi;
-        if (avLoss != 0) {
-            rsi = 100 - (100 / (1 + rs));
-        } else {
-            rsi = 100; // Set rsi to a default value when avLoss is zero.
-        }
-
-        return rsi;
-
-    }
+    // REDACTED
+    /*
+     * public static double getRsi() throws Exception {
+     * 
+     * Candle[] allCandles = new Candle[15];
+     * 
+     * String apiUrl =
+     * "https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=15";
+     * 
+     * // create a URL object for the API endpoint
+     * URL url = new URL(apiUrl);
+     * 
+     * // create an HttpURLConnection object and set the request method to GET
+     * HttpURLConnection con = (HttpURLConnection) url.openConnection();
+     * con.setRequestMethod("GET");
+     * 
+     * // read the response from the API endpoint
+     * BufferedReader in = new BufferedReader(new
+     * InputStreamReader(con.getInputStream()));
+     * String inputLine;
+     * StringBuffer response = new StringBuffer();
+     * while ((inputLine = in.readLine()) != null) {
+     * response.append(inputLine);
+     * }
+     * in.close();
+     * 
+     * JSONArray jsonArray = new JSONArray(response.toString());
+     * // System.out.println(jsonArray.toString());
+     * for (int i = 0; i < 13; i++) {
+     * allCandles[i] = new Candle((JSONObject) jsonArray.get(i),
+     * ((JSONObject) jsonArray.get(i + 1)).getDouble("close"));
+     * }
+     * 
+     * double avGain = 0;
+     * double avLoss = 0;
+     * 
+     * for (int j = 0; j < 13; j++) {
+     * if (allCandles[j].getGain() == 0) {
+     * avLoss += allCandles[j].getLoss();
+     * } else {
+     * avGain += allCandles[j].getGain();
+     * }
+     * }
+     * 
+     * avGain /= 13;
+     * avLoss /= 13;
+     * 
+     * double rs = avGain / avLoss;
+     * 
+     * double rsi;
+     * if (avLoss != 0) {
+     * rsi = 100 - (100 / (1 + rs));
+     * } else {
+     * rsi = 100; // Set rsi to a default value when avLoss is zero.
+     * }
+     * 
+     * return rsi;
+     * 
+     * }
+     */
 }
 
 class Candle {
