@@ -117,7 +117,7 @@ public class TradingBot {
                 .build();
 
         HttpResponse response = client.send(getRequest, HttpResponse.BodyHandlers.ofString());
-        // System.out.println(response.body());
+
         JSONArray jsonArray = new JSONArray(response.body().toString());
 
         double btcBal = ((JSONObject) jsonArray.get(0)).getDouble("available");
@@ -267,7 +267,7 @@ class Candle {
         try {
             close = e.getDouble("close");
         } catch (Exception f) {
-            // do nothing
+
         }
         this.prevClose = prevClose;
 
@@ -276,7 +276,7 @@ class Candle {
 
     public void calcGL() {
         double temp = close - prevClose;
-        // System.out.println("temp is:"+temp);
+
         if (temp < 0) {
             priceLoss = Math.abs(temp);
 
