@@ -21,11 +21,10 @@ public class TradingBot {
     public static void main(String[] args) throws Exception {
 
         while (true) {
-            System.out.println("The price right now is: " + getBidPrice());
-            System.out.println("The moving average is: " + getMa());
-            String loco = "below";
+            System.out.println("The price right now is: " + getBidPrice() + " and the MA is: " + getMa());
+            String loco = "BELOW";
             if (getMa() < getBidPrice()) {
-                loco = "above";
+                loco = "ABOVE";
             }
 
             System.out.println("The price is " + loco + " the moving average.");
@@ -148,7 +147,6 @@ public class TradingBot {
             obj.put("side", "sell");
         }
         obj.put("type", "market");
-        obj.put("time_in_force", "GTC");
         obj.put("quantity", balance);
 
         String auth = key + ":" + priv;
