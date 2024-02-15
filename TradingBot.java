@@ -125,7 +125,7 @@ public class TradingBot {
         JSONArray jsonArray = new JSONArray(response.body().toString());
 
         double btcBal = ((JSONObject) jsonArray.get(0)).getDouble("available");
-        double usdtBal = ((JSONObject) jsonArray.get(3)).getDouble("available");
+        double usdtBal = ((JSONObject) jsonArray.get(2)).getDouble("available");
 
         // Buffer since the amount available cant actually be used for market orders
 
