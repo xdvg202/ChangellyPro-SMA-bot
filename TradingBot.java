@@ -30,12 +30,12 @@ public class TradingBot {
 
             System.out.println("The price is " + loco + " the moving average.");
 
-            if (crossOver() && checkPriceLocation() == 2 && !positionOpen) {
+            if (crossOver() && checkPriceLocation() == belowMA && !positionOpen) {
                 postOrderRequest(true, getAvailableBalance(true));
                 positionOpen = true;
                 Thread.sleep(300000);
 
-            } else if (crossOver() && checkPriceLocation() == 1 && positionOpen) {
+            } else if (crossOver() && checkPriceLocation() == aboveMA && positionOpen) {
                 postOrderRequest(false, getAvailableBalance(false));
                 positionOpen = false;
             }
@@ -61,17 +61,22 @@ public class TradingBot {
         JSONArray jsonArray = new JSONArray(response.toString());
 
         int pos = 0;
+        int candleCount = 0;
 
         for (int i = 1; i < 6; i++) {
             if (jsonArray.getJSONObject(i).getDouble("close") > getMa()) {
                 pos = 1;
+                candleCount++;
             } else {
                 pos = 2;
+                candleCount++;
             }
 
         }
-
-        return pos;
+        if (candleCount == 5) {
+            return pos;
+        }
+        return 0;
     }
 
     public static boolean crossOver() throws Exception {
@@ -193,66 +198,6 @@ public class TradingBot {
 
         return sum /= 40;
     }
-    // REDACTED
-    /*
-     * public static double getRsi() throws Exception {
-     * 
-     * Candle[] allCandles = new Candle[15];
-     * 
-     * String apiUrl =
-     * "https://api.pro.changelly.com/api/3/public/candles/BTCUSDT?period=M5&limit=15";
-     * 
-     * // create a URL object for the API endpoint
-     * URL url = new URL(apiUrl);
-     * 
-     * // create an HttpURLConnection object and set the request method to GET
-     * HttpURLConnection con = (HttpURLConnection) url.openConnection();
-     * con.setRequestMethod("GET");
-     * 
-     * // read the response from the API endpoint
-     * BufferedReader in = new BufferedReader(new
-     * InputStreamReader(con.getInputStream()));
-     * String inputLine;
-     * StringBuffer response = new StringBuffer();
-     * while ((inputLine = in.readLine()) != null) {
-     * response.append(inputLine);
-     * }
-     * in.close();
-     * 
-     * JSONArray jsonArray = new JSONArray(response.toString());
-     * // System.out.println(jsonArray.toString());
-     * for (int i = 0; i < 13; i++) {
-     * allCandles[i] = new Candle((JSONObject) jsonArray.get(i),
-     * ((JSONObject) jsonArray.get(i + 1)).getDouble("close"));
-     * }
-     * 
-     * double avGain = 0;
-     * double avLoss = 0;
-     * 
-     * for (int j = 0; j < 13; j++) {
-     * if (allCandles[j].getGain() == 0) {
-     * avLoss += allCandles[j].getLoss();
-     * } else {
-     * avGain += allCandles[j].getGain();
-     * }
-     * }
-     * 
-     * avGain /= 13;
-     * avLoss /= 13;
-     * 
-     * double rs = avGain / avLoss;
-     * 
-     * double rsi;
-     * if (avLoss != 0) {
-     * rsi = 100 - (100 / (1 + rs));
-     * } else {
-     * rsi = 100; // Set rsi to a default value when avLoss is zero.
-     * }
-     * 
-     * return rsi;
-     * 
-     * }
-     */
 }
 
 class Candle {
