@@ -15,8 +15,8 @@ public class TradingBot {
     public static final String priv = "";
     public static boolean positionOpen = false;
 
-    public static final int aboveMA = 1;
-    public static final int belowMA = 2;
+    public static final int ABOVEMA = 1;
+    public static final int BELOWMA = 2;
 
     public static void main(String[] args) throws Exception {
 
@@ -29,12 +29,12 @@ public class TradingBot {
 
             System.out.println("The price is " + loco + " the moving average.");
 
-            if (crossOver() && checkPriceLocation() == belowMA && !positionOpen) {
+            if (crossOver() && checkPriceLocation() == BELOWMA && !positionOpen) {
                 postOrderRequest(true, getAvailableBalance(true));
                 positionOpen = true;
                 Thread.sleep(300000);
 
-            } else if (crossOver() && checkPriceLocation() == aboveMA && positionOpen) {
+            } else if (crossOver() && checkPriceLocation() == ABOVEMA && positionOpen) {
                 postOrderRequest(false, getAvailableBalance(false));
                 positionOpen = false;
             }
@@ -59,21 +59,21 @@ public class TradingBot {
 
         JSONArray jsonArray = new JSONArray(response.toString());
 
-        int pos = 0;
-        int candleCount = 0;
+        int abCount = 0;
+        int belCount = 0;
 
         for (int i = 1; i < 6; i++) {
             if (jsonArray.getJSONObject(i).getDouble("close") > getMa()) {
-                pos = 1;
-                candleCount++;
+                abCount++;
             } else {
-                pos = 2;
-                candleCount++;
+                belCount++;
             }
 
         }
-        if (candleCount == 5) {
-            return pos;
+        if (abCount == 5) {
+            return ABOVEMA;
+        } else if (belCount == 5) {
+            return BELOWMA;
         }
         return 0;
     }
